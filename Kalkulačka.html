@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Prezentace aplikací</title>
+  <link href="Kalkulačka.css" rel="stylesheet">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <section>
+  <div class="calculator-grid">
+    <div class="output">
+      <div data-previous-operand class="previous-operand"></div>
+      <div data-current-operand class="current-operand"></div>
+    </div>
+    <button data-all-clear class="span-two">AC</button>
+    <button data-delete>DEL</button>
+    <button data-operation>÷</button>
+    <button data-number>1</button>
+    <button data-number>2</button>
+    <button data-number>3</button>
+    <button data-operation>*</button>
+    <button data-number>4</button>
+    <button data-number>5</button>
+    <button data-number>6</button>
+    <button data-operation>+</button>
+    <button data-number>7</button>
+    <button data-number>8</button>
+    <button data-number>9</button>
+    <button data-operation>-</button>
+    <button data-number>.</button>
+    <button data-number>0</button>
+    <button data-equals class="span-two">=</button>
+  </div>
+  <script>
+    class Calculator {
+    constructor(previousOperandTextElement, currentOperandTextElement) {
+      this.previousOperandTextElement = previousOperandTextElement
+      this.currentOperandTextElement = currentOperandTextElement
+      this.clear()
+    }
+  
+    // Metoda clear vyčistí všechny proměnné používané kalkulačkou
+clear() {
+  this.currentOperand = ''
+  this.previousOperand = ''
+  this.operation = undefined
+}
+
+// Metoda delete odstraní poslední znak z aktuálního operandu
+delete()  {
+  this.currentOperand = this.currentOperand.toString().slice(0, -1)
+}
+
+// Metoda appendNumber přidá zadané číslo k aktuálnímu operandu
+// Pokud je zadané číslo desetinná tečka a aktuální operand již obsahuje desetinnou tečku, metoda se ukončí
+appendNumber(number) {
+  if (number === '.' && this.currentOperand.includes('.')) return
+  this.currentOperand = this.currentOperand.toString() + number.toString()
+}
+
+// Metoda chooseOperation nastaví aktuální operaci
+// Pokud není zadán aktuální operand, metoda se ukončí
+// Pokud je zadán předchozí operand, metoda compute vypočítá výsledek a nastaví ho jako aktuální operand
+chooseOperation(operation) {
+  if (this.currentOperand === '') return
+  if (this.previousOperand !== '') {
+    this.compute()
+  }
+  this.operation = operation
+  this.previousOperand = this.currentOperand
+  this.currentOperand = ''
+}
+
+  
+    // Funkce compute provádí výpočet na základě předchozího operandu, aktuálního operandu a zvolené operace
+  compute() {
+    let computation
+    // Převeď předchozí a aktuální operandy na čísla
+    const prev = parseFloat(this.previousOperand)
+    const current = parseFloat(this.currentOperand)
+    // Vrať se, pokud není operand žádné číslo
+    if (isNaN(prev) || isNaN(current)) return
+    // Proveď výpočet na základě zvolené operace
+    switch (this.operation) {
+      case '+':
+        computation = prev + current
+        break
+      case '-':
+        computation = prev - current
+        break
+      case '*':
+        computation = prev * current
+        break
+      case '÷':
+        computation = prev / current
+        break
+      default:
+        // Vrať se, pokud není operace rozpoznána
+        return
+    }
+    // Aktualizuj aktuální operand na výsledek výpočtu a vymaž předchozí operand a operaci
+    this.currentOperand = computation
+    this.operation = undefined
+    this.previousOperand = ''
+  }
+  
+  // Funkce getDisplayNumber formátuje číslo pro zobrazení na displeji kalkulačky
+  getDisplayNumber(number) {
+    // Převeď číslo na řetězec
+    const stringNumber = number.toString()
+    // Získej celočíselné a desetinné cifry čísla
+    const integerDigits = parseFloat(stringNumber.split('.')[0])
+    const decimalDigits = stringNumber.split('.')[1]
+    let integerDisplay
+    if (isNaN(integerDigits)) {
+      integerDisplay = ''
+    } else {
+      integerDisplay = integerDigits.toLocaleString('en', { maximumFractionDigits: 0 })
+    }
+    if (decimalDigits != null) {
+      return `${integerDisplay}.${decimalDigits}`
+    } else {
+      return integerDisplay
+    }
+  }
+  
+  
+    updateDisplay() {
+      // Tato metoda aktualizuje textový obsah dvou textových elementů, které zobrazují aktuální operand a předchozí operand a operaci.
+      this.currentOperandTextElement.innerText =
+        this.getDisplayNumber(this.currentOperand)
+        // Pokud je zde nějaká operace, zobrazí se předchozí operand a operace.
+      if (this.operation != null) {
+        this.previousOperandTextElement.innerText =
+          `${this.getDisplayNumber(this.previousOperand)} ${this.operation}`
+      } else {
+        // Pokud není žádná operace, je textový element pro předchozí operand vyprázdněn.
+        this.previousOperandTextElement.innerText = ''
+      }
+    }
+  }
+  
+  // Následující řádky kódu vybírají prvky DOM, které odpovídají tlačítkům v kalkulačce, a ukládají je do proměnných.
+  const numberButtons = document.querySelectorAll('[data-number]')
+  const operationButtons = document.querySelectorAll('[data-operation]')
+  const equalsButton = document.querySelector('[data-equals]')
+  const deleteButton = document.querySelector('[data-delete]')
+  const allClearButton = document.querySelector('[data-all-clear]')
+  const previousOperandTextElement = document.querySelector('[data-previous-operand]')
+  const currentOperandTextElement = document.querySelector('[data-current-operand]')
+  // Je vytvořen nový objekt Calculator a předán dva textové elementy, které zobrazují aktuální a předchozí operandy.
+  const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement)
+  
+  // Pro každé číselné tlačítko je přidán událostní posluchač, který volá metodu appendNumber() objektu calculator a aktualizuje zobrazení při kliknutí na tlačítko.
+  numberButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      calculator.appendNumber(button.innerText)
+      calculator.updateDisplay()
+    })
+  })
+  // Pro každé číselné tlačítko je přidán událostní posluchač, který volá metodu appendNumber() objektu calculator a aktualizuje zobrazení při kliknutí na tlačítko.
+  operationButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      calculator.chooseOperation(button.innerText)
+      calculator.updateDisplay()
+    })
+  })
+  // Je přidán událostní posluchač k tlačítku rovná se, který volá metodu compute() objektu calculator a aktualizuje zobrazení při kliknutí na tlačítko.
+  equalsButton.addEventListener('click', button => {
+    calculator.compute()
+    calculator.updateDisplay()
+  })
+  // Je přidán událostní posluchač k tlačítku vymazat vše, který volá metodu clear() objektu calculator a aktualizuje zobrazení při kliknutí na tlačítko.
+  allClearButton.addEventListener('click', button => {
+    calculator.clear()
+    calculator.updateDisplay()
+  })
+  // Je přidán událostní posluchač k tlačítku vymazat, který volá metodu delete() objektu calculator a aktualizuje zobrazení při kliknutí na tlačítko.
+  deleteButton.addEventListener('click', button => {
+    calculator.delete()
+    calculator.updateDisplay()
+  })
+  
+
+  </script>
+  </section>
+</body>
+</html>
